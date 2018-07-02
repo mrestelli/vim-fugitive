@@ -10,6 +10,10 @@ if !exists('g:fugitive_git_executable')
   let g:fugitive_git_executable = 'git'
 endif
 
+if !exists('g:Fugitive_git_path_adapter')
+  let g:Fugitive_git_path_adapter = {path -> path}
+endif
+
 " Section: Utility
 
 function! s:function(name) abort
@@ -310,12 +314,14 @@ endfunction
 call s:add_methods('repo',['dir','tree','bare','translate','head'])
 
 function! s:repo_git_command(...) dict abort
-  let git = s:git_command() . ' --git-dir='.s:shellesc(self.git_dir)
+  let git = s:git_command() . ' --git-dir='.s:shellesc(
+  \ s:sub(g:Fugitive_git_path_adapter(self.git_dir),'\n$',''))
   return git.join(map(copy(a:000),'" ".s:shellesc(v:val)'),'')
 endfunction
 
 function! s:repo_git_chomp(...) dict abort
-  let git = g:fugitive_git_executable . ' --git-dir='.s:shellesc(self.git_dir)
+  let git = g:fugitive_git_executable . ' --git-dir='.s:shellesc(
+  \ s:sub(g:Fugitive_git_path_adapter(self.git_dir),'\n$',''))
   let output = git.join(map(copy(a:000),'" ".s:shellesc(v:val)'),'')
   return s:sub(system(output),'\n$','')
 endfunction
