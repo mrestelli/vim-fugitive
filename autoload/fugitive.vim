@@ -10,6 +10,14 @@ if !exists('g:fugitive_git_executable')
   let g:fugitive_git_executable = 'git'
 endif
 
+" Rationale: whenever passing a path to git, this path should be
+" adapted with the following function. As a rule of thumb, a call to
+" this function is required after each --<git-command-line-option>
+" appearing in this script.
+"
+" Notice that file paths are used in the present script also for other
+" purposes than passing them to git, and for all these cases there
+" should be no call to Fugitive_git_path_adapter.
 if !exists('g:Fugitive_git_path_adapter')
   let g:Fugitive_git_path_adapter = {path -> path}
 endif
@@ -115,14 +123,17 @@ function! fugitive#Prepare(...) abort
   if empty(args)
     return g:fugitive_git_executable
   elseif args[0] !~# '^-' && args[0] =~# '[\/.]\|^$'
-    let args[0] = '--git-dir=' . args[0]
+    let args[0] = '--git-dir=' . s:shellesc(
+    \ s:sub(g:Fugitive_git_path_adapter(args[0]),'\n$',''))
   endif
   return g:fugitive_git_executable . ' ' . join(map(args, 's:shellesc(v:val)'), ' ')
 endfunction
 
 function! s:TreeChomp(...) abort
-  let args = ['--git-dir=' . b:git_dir] + a:000
-  let tree = FugitiveTreeForGitDir(b:git_dir)
+  let args = ['--git-dir=' . s:shellesc(
+  \ s:sub(g:Fugitive_git_path_adapter(b:git_dir),'\n$',''))] + a:000
+  let tree = s:shellesc(
+  \ s:sub(g:Fugitive_git_path_adapter(FugitiveTreeForGitDir(b:git_dir)),'\n$',''))
   if !empty(tree)
     call insert(args, '--work-tree=' . tree)
   endif
@@ -2151,7 +2162,8 @@ augroup END
 " Section: Gblame
 
 function! s:Keywordprg() abort
-  let args = ' --git-dir='.escape(b:git_dir,"\\\"' ")
+  let args = ' --git-dir='.escape(s:shellesc(
+  \ s:sub(g:Fugitive_git_path_adapter(b:git_dir),'\n$','') ,"\\\"' ")
   if has('gui_running') && !has('win32')
     return s:git_command() . ' --no-pager' . args . ' log -1'
   else
