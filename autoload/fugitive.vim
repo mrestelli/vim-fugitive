@@ -18,7 +18,8 @@ endif
 " Notice that file paths are used in the present script also for other
 " purposes than passing them to git, and for all these cases there
 " should be no call to Fugitive_git_path_adapter.
-if !exists('g:Fugitive_git_path_adapter')
+if and(!exists('g:Fugitive_git_path_adapter') , 
+   \   !exists( '*Fugitive_git_path_adapter')  )
   let g:Fugitive_git_path_adapter = {path -> path}
 endif
 
