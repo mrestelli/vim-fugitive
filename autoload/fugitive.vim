@@ -2164,7 +2164,7 @@ augroup END
 
 function! s:Keywordprg() abort
   let args = ' --git-dir='.escape(s:shellesc(
-  \ s:sub(g:Fugitive_git_path_adapter(b:git_dir),'\n$','') ,"\\\"' ")
+  \ s:sub(g:Fugitive_git_path_adapter(b:git_dir),'\n$','')) ,"\\\"' ")
   if has('gui_running') && !has('win32')
     return s:git_command() . ' --no-pager' . args . ' log -1'
   else
